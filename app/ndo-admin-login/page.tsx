@@ -1,20 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "../../src/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { getSupabaseClient } from "../../src/lib/supabaseClient";
 
 export default function AdminLogin() {
   const router = useRouter();
+  const supabase = getSupabaseClient(); // ✅ create client safely here
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 🔐 Auto-redirect if already logged in
+  /* ---------------------------
+     AUTO REDIRECT IF LOGGED IN
+  ---------------------------- */
+
   useEffect(() => {
-    const checkSession = async () => {
+    async function checkSession() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -22,10 +26,14 @@ export default function AdminLogin() {
       if (session) {
         router.push("/ndo-admin-portal");
       }
-    };
+    }
 
     checkSession();
-  }, [router]);
+  }, [router, supabase]);
+
+  /* ---------------------------
+     LOGIN HANDLER
+  ---------------------------- */
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
