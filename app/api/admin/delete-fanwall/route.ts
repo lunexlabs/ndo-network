@@ -1,24 +1,46 @@
-// app/api/admin/delete-fanwall/route.ts
-
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
 
 export async function POST(req: Request) {
-  const { id } = await req.json();
+  try {
+    const { id } = await req.json()
 
-  const supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+    if (!id) {
+      return NextResponse.json(
+        { error: "Message ID is required" },
+        { status: 400 }
+      )
+    }
 
-  const { error } = await supabase
-    .from("fan_wall_messages")
-    .delete()
-    .eq("id", id);
+    const supabaseUrl = process.env.SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error("Missing Supabase environment variables")
+    }
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey)
+
+    const { error } = await supabase
+      .from("fan_wall_messages")
+      .delete()
+      .eq("id", id)
+
+    if (error) {
+      console.error("Fanwall delete error:", error)
+      return NextResponse.json(
+        { error: "Database delete failed" },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ success: true })
+
+  } catch (err) {
+    console.error("Delete fanwall crash:", err)
+    return NextResponse.json(
+      { error: "Server error" },
+      { status: 500 }
+    )
   }
-
-  return NextResponse.json({ success: true });
 }

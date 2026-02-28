@@ -1,31 +1,36 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
+import { NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
+import { Resend } from "resend"
 
 export async function POST(req: Request) {
   try {
-    const { id, status } = await req.json();
+    const { id, status } = await req.json()
 
     if (!id || !status) {
       return NextResponse.json(
         { error: "Missing id or status" },
         { status: 400 }
-      );
+      )
     }
 
     if (!["approved", "rejected"].includes(status)) {
       return NextResponse.json(
         { error: "Invalid status value" },
         { status: 400 }
-      );
+      )
     }
 
-    const supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // ✅ Validate environment variables safely
+    const supabaseUrl = process.env.SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const resendKey = process.env.RESEND_API_KEY
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error("Missing Supabase environment variables")
+    }
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey)
+    const resend = resendKey ? new Resend(resendKey) : null
 
     /* ---------------------------------------
        FETCH SUBMISSION
@@ -36,24 +41,20 @@ export async function POST(req: Request) {
         .from("actv_submissions")
         .select("*")
         .eq("id", id)
-        .single();
+        .single()
 
     if (fetchError || !submission) {
       return NextResponse.json(
         { error: "Submission not found" },
         { status: 404 }
-      );
+      )
     }
-
-    /* ---------------------------------------
-       PREVENT DUPLICATE UPDATE
-    --------------------------------------- */
 
     if (submission.status === status) {
       return NextResponse.json(
         { message: "Status already set." },
         { status: 200 }
-      );
+      )
     }
 
     /* ---------------------------------------
@@ -63,86 +64,81 @@ export async function POST(req: Request) {
     const { error: updateError } = await supabase
       .from("actv_submissions")
       .update({ status })
-      .eq("id", id);
+      .eq("id", id)
 
     if (updateError) {
-      console.error("Database update error:", updateError);
+      console.error("Database update error:", updateError)
       return NextResponse.json(
-        { error: updateError.message },
+        { error: "Database update failed" },
         { status: 500 }
-      );
+      )
     }
 
     /* ---------------------------------------
-       PREPARE PROFESSIONAL EMAIL
+       PREPARE EMAIL
     --------------------------------------- */
 
-    let subject = "";
-    let html = "";
+    let subject = ""
+    let html = ""
 
     if (status === "approved") {
-      subject = "🎉 You're In! ACTV Island Approved";
+      subject = "🎉 You're In! ACTV Island Approved"
       html = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
           <h2 style="color:#16a34a;">Congratulations!</h2>
           <p>Your island <strong>${submission.island_name}</strong> 
           has officially been approved for <strong>${submission.season}</strong>.</p>
-
           <p>Our team will reach out shortly with scheduling details.</p>
-
           <hr style="margin:20px 0;" />
-
           <p style="font-size:12px;color:#888;">
             ACTV – Island Edition<br/>
             Hosted by NDO
           </p>
         </div>
-      `;
+      `
     }
 
     if (status === "rejected") {
-      subject = "ACTV Submission Update";
+      subject = "ACTV Submission Update"
       html = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
           <h2>Thank You For Submitting</h2>
           <p>Your island <strong>${submission.island_name}</strong> 
           was not selected for <strong>${submission.season}</strong>.</p>
-
           <p>We truly appreciate the effort and encourage you to submit again next season.</p>
-
           <hr style="margin:20px 0;" />
-
           <p style="font-size:12px;color:#888;">
             ACTV – Island Edition<br/>
             Hosted by NDO
           </p>
         </div>
-      `;
+      `
     }
 
     /* ---------------------------------------
-       SEND EMAIL (NON-BLOCKING FAILURE)
+       SEND EMAIL (Non-blocking)
     --------------------------------------- */
 
-    try {
-      await resend.emails.send({
-        from: "ACTV <noreply@ndo.network>",
-        to: submission.email,
-        subject,
-        html,
-      });
-    } catch (emailError) {
-      console.error("Email send failed:", emailError);
-      // Do not crash the request if email fails
+    if (resend) {
+      try {
+        await resend.emails.send({
+          from: "ACTV <noreply@ndo.network>",
+          to: submission.email,
+          subject,
+          html,
+        })
+      } catch (emailError) {
+        console.error("Email send failed:", emailError)
+      }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true })
 
   } catch (err: any) {
-    console.error("Server crash:", err);
+    console.error("Server crash:", err)
     return NextResponse.json(
-      { error: err?.message || "Server crash" },
+      { error: "Server error" },
       { status: 500 }
-    );
+    )
   }
 }
