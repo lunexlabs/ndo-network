@@ -20,7 +20,7 @@ export default function FeaturedVideo({ video }: { video: Video }) {
 
   return (
     <div className="mb-20">
-      <h2 className="text-sm uppercase tracking-widest text-purple-400 mb-6">
+      <h2 className="text-sm uppercase tracking-widest text-black-400 mb-6">
         Featured
       </h2>
 
@@ -46,7 +46,7 @@ export default function FeaturedVideo({ video }: { video: Video }) {
 
           {/* Content */}
           <div>
-            <h3 className="text-3xl font-bold mb-4 group-hover:text-purple-400 transition">
+            <h3 className="text-3xl font-bold mb-4 group-hover:text-green-400 transition">
               {video.title}
             </h3>
 
@@ -54,7 +54,7 @@ export default function FeaturedVideo({ video }: { video: Video }) {
               {formatDate(video.publishedAt)}
             </p>
 
-            <span className="text-sm text-purple-400">
+            <span className="text-sm text-black-400">
               Watch on YouTube →
             </span>
           </div>

@@ -9,7 +9,6 @@ export default function ACTVPage() {
       <ACTVHero />
       <ACTVSeasonOverview />
       <ACTVEpisodes />
-      <ACTVCTA />
     </>
   );
 }

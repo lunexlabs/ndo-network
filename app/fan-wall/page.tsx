@@ -3,6 +3,36 @@ export const dynamic = "force-dynamic";
 import Container from "../../src/components/layout/Container";
 import { getApprovedMessages } from "./actions";
 import FanWallForm from "./FanWallForm";
+import type { Metadata } from "next";
+
+
+export const metadata: Metadata = {
+  title: "Fan Wall – NDO Network",
+  description:
+    "Leave a message on the NDO Network Fan Wall and be part of the growing community supporting ACTV Island Edition.",
+  openGraph: {
+    title: "Fan Wall – NDO Network",
+    description:
+      "Join the NDO community and leave your message on the Fan Wall.",
+    url: "https://ndo.network/fans",
+    images: [
+      {
+        url: "https://ndo.network/images/seo/fans.jpg",
+        width: 1200,
+        height: 630,
+        alt: "NDO Network Fan Wall"
+      }
+    ],
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["https://ndo.network/images/seo/fans.jpg"]
+  },
+  alternates: {
+    canonical: "https://ndo.network/fans"
+  }
+};
 
 export default async function FanWallPage() {
   const messages = await getApprovedMessages();
@@ -31,7 +61,7 @@ export default async function FanWallPage() {
               Fan Wall
             </h1>
 
-            <p className="text-lg text-gray-200 leading-relaxed">
+            <p className="text-lg text-white leading-relaxed">
               Leave a message. Share encouragement. Be part of the journey.
             </p>
           </div>

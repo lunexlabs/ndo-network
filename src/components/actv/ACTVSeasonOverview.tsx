@@ -8,7 +8,7 @@ export default function ACTVSeasonOverview() {
       {/* 🔥 Background Video */}
       <video
         className="absolute inset-0 w-full h-full object-cover"
-        src="/videos/actv/actv-season1.mov"
+        src="/videos/actv/actv-season-overview.mp4"
         autoPlay
         muted
         loop

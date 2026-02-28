@@ -27,7 +27,7 @@ export default function ACTVHero() {
               ACTV: Island Edition
             </h1>
 
-            <p className="text-lg text-gray-200 mb-10 max-w-xl">
+            <p className="text-lg text-white mb-10 max-w-xl">
               A competitive island showcase series where creators go head-to-head.
               The community votes. One island claims the crown.
             </p>
@@ -45,6 +45,14 @@ export default function ACTVHero() {
                 className="border border-white/70 hover:bg-white hover:text-black px-6 py-3 rounded-md font-medium transition"
               >
                 Submit Your Island
+              </Link>
+
+              {/* 🔥 New Learn More Button */}
+              <Link
+                href="/actv/learn-more"
+                className="text-white/80 hover:text-white underline underline-offset-4 transition self-center"
+              >
+                Learn More →
               </Link>
             </div>
           </div>

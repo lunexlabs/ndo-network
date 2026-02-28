@@ -4,6 +4,7 @@ import { useState } from "react";
 import Container from "../../src/components/layout/Container";
 import { submitContact } from "./actions";
 
+
 export default function ContactPage() {
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"

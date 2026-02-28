@@ -1,6 +1,34 @@
 import Container from "../../src/components/layout/Container";
 import Image from "next/image";
 
+export const metadata: Metadata = {
+  title: "About NDO Network",
+  description:
+    "Learn the story behind NDO Network, the vision for ACTV Island Edition, and the mission to spotlight creativity in gaming.",
+  openGraph: {
+    title: "About NDO Network",
+    description:
+      "The story, mission, and vision behind NDO Network and ACTV.",
+    url: "https://ndo.network/about",
+    images: [
+      {
+        url: "https://ndo.network/images/seo/about.jpg",
+        width: 1200,
+        height: 630,
+        alt: "About NDO Network"
+      }
+    ],
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["https://ndo.network/images/seo/about.jpg"]
+  },
+  alternates: {
+    canonical: "https://ndo.network/about"
+  }
+};
+
 export default function AboutPage() {
   return (
     <>
@@ -9,7 +37,7 @@ export default function AboutPage() {
         {/* Background Image */}
       <video
         className="absolute inset-0 w-full h-full object-cover z-0"
-        src="/videos/about/hero-video.mkv"
+        src="/videos/about/about-header.mp4"
         autoPlay
         muted
         loop
@@ -24,13 +52,13 @@ export default function AboutPage() {
         <div className="relative z-10">
           <Container>
             <div className="max-w-3xl">
-              <span className="text-sm uppercase tracking-widest text-purple-400 mb-6 block">
+              <span className="text-sm uppercase tracking-widest text-red-400 mb-6 block">
                 About NDO
               </span>
 
-              <h1 className="text-5xl font-bold mb-8">
-                Building More Than a Channel.
-              </h1>
+            <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6">
+              Building a Network for Gaming Legacy
+            </h1>
 
               <p className="text-lg text-white leading-relaxed">
                 NDO started streaming on YouTube as a way to document something personal, the love

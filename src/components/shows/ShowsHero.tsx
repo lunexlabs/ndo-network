@@ -8,7 +8,7 @@ export default function ShowsHero() {
       {/* Background Video */}
       <video
         className="absolute inset-0 w-full h-full object-cover z-0"
-        src="/videos/shows/shows-hero.mp4"
+        src="/videos/shows/show-header.mp4"
         autoPlay
         muted
         loop
@@ -44,7 +44,7 @@ export default function ShowsHero() {
               Network Shows
             </h1>
 
-            <p className="text-white/90 text-lg leading-relaxed">
+            <p className="text-white text-lg leading-relaxed">
               Structured gaming formats, competitive series, and evolving
               interactive content produced under the NDO Network.
             </p>

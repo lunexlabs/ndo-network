@@ -1,5 +1,35 @@
 import Container from "../../src/components/layout/Container";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+
+export const metadata: Metadata = {
+  title: "Partners & Sponsorship – NDO Network",
+  description:
+    "Explore sponsorship opportunities and partnerships with NDO Network and ACTV Island Edition.",
+  openGraph: {
+    title: "Partners & Sponsorship – NDO Network",
+    description:
+      "Collaborate with NDO Network through sponsorship and brand partnerships.",
+    url: "https://ndo.network/partners",
+    images: [
+      {
+        url: "https://ndo.network/images/seo/partners.jpg",
+        width: 1200,
+        height: 630,
+        alt: "NDO Network Partnerships"
+      }
+    ],
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["https://ndo.network/images/seo/partners.jpg"]
+  },
+  alternates: {
+    canonical: "https://ndo.network/partners"
+  }
+};
 
 export default function PartnerPage() {
   return (
@@ -33,7 +63,7 @@ export default function PartnerPage() {
               Partner With NDO
             </h1>
 
-            <p className="text-lg text-gray-200 leading-relaxed">
+            <p className="text-lg text-white leading-relaxed">
               NDO integrates brands into structured gaming entertainment —
               live streams, competitive formats, and long-form digital series.
               We don’t just place logos. We build integration into the content.
@@ -137,7 +167,7 @@ export default function PartnerPage() {
 
             <Link
               href="/contact"
-              className="inline-flex items-center justify-center bg-purple-600 hover:bg-purple-500 text-white px-8 py-3 rounded-md text-sm font-medium transition"
+              className="inline-flex items-center justify-center bg-black hover:bg-gray-700 text-white px-8 py-3 rounded-md text-sm font-medium transition"
             >
               Contact NDO
             </Link>

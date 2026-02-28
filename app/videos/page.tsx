@@ -1,7 +1,36 @@
 import Container from "../../src/components/layout/Container";
 import FeaturedVideo from "../../src/components/videos/FeaturedVideo";
 import { fetchYouTubeVideos } from "@/src/lib/youtube";
+import type { Metadata } from "next";
 
+
+export const metadata: Metadata = {
+  title: "Latest Videos – NDO Network",
+  description:
+    "Watch the latest gaming videos, live stream replays, and ACTV Island Edition episodes from NDO Network.",
+  openGraph: {
+    title: "Latest Videos – NDO Network",
+    description:
+      "Watch gaming content, live streams, and ACTV episodes.",
+    url: "https://ndo.network/videos",
+    images: [
+      {
+        url: "https://ndo.network/images/seo/videos.jpg",
+        width: 1200,
+        height: 630,
+        alt: "NDO Network Videos"
+      }
+    ],
+    type: "video.other"
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["https://ndo.network/images/seo/videos.jpg"]
+  },
+  alternates: {
+    canonical: "https://ndo.network/videos"
+  }
+};
 interface Video {
   id: string;
   title: string;
@@ -37,12 +66,20 @@ export default async function VideosPage() {
     );
   }
 
-  const [featured, ...rest] = videos;
+  // 🔥 Pull from env
+  const FEATURED_ID = process.env.FEATURED_VIDEO_ID;
+
+  // Try to find matching video
+  const featured =
+    videos.find((v) => v.id === FEATURED_ID) ?? videos[0];
+
+  // Remove featured from rest list
+  const rest = videos.filter((v) => v.id !== featured.id);
 
   return (
     <section className="py-32">
       <Container>
-        <h1 className="text-4xl font-bold mb-16">Latest Videos</h1>
+        <h1 className="text-4xl font-bold mb-16">Latest Watch</h1>
 
         {featured && <FeaturedVideo video={featured} />}
 
