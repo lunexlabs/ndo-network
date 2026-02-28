@@ -1,42 +1,9 @@
 import Container from "../layout/Container";
 import Link from "next/link";
-
-interface Video {
-  id: string;
-  title: string;
-  thumbnail: string;
-  publishedAt?: string;
-}
-
-/* ----------------------------------
-   CACHED SERVER FETCH
------------------------------------ */
-
-async function getVideos(): Promise<Video[]> {
-  try {
-    const res = await fetch("/api/youtube", {
-      next: { revalidate: 3600 }, // 1 hour cache
-    });
-
-    if (!res.ok) {
-      console.error("YouTube fetch failed:", res.status);
-      return [];
-    }
-
-    const data = await res.json();
-
-    if (!Array.isArray(data)) return [];
-
-    return data.slice(0, 3);
-
-  } catch (err) {
-    console.error("YouTube fetch crash:", err);
-    return [];
-  }
-}
+import { fetchYouTubeVideos } from "@/src/lib/youtube";
 
 export default async function LatestPreview() {
-  const videos = await getVideos();
+  const videos = await fetchYouTubeVideos();
 
   return (
     <section className="py-28 bg-gray-50 border-t border-gray-200">
@@ -65,7 +32,7 @@ export default async function LatestPreview() {
           </p>
         ) : (
           <div className="grid md:grid-cols-3 gap-8">
-            {videos.map((video) => (
+            {videos.slice(0, 3).map((video) => (
               <a
                 key={video.id}
                 href={`https://youtube.com/watch?v=${video.id}`}
