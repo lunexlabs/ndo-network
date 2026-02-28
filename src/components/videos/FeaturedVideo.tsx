@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface Video {
   id: string;
   title: string;
@@ -23,20 +25,26 @@ export default function FeaturedVideo({ video }: { video: Video }) {
       </h2>
 
       <a
-        href={`https://youtube.com/watch?v=${video.id}`}
+        href={`https://youtube.com/watch?v=tlrzWQkskWs`}
         target="_blank"
         rel="noopener noreferrer"
         className="group block"
       >
         <div className="grid lg:grid-cols-2 gap-10 items-center">
-          <div className="aspect-video rounded-xl overflow-hidden border border-black/10">
-            <img
+          
+          {/* Thumbnail */}
+          <div className="relative aspect-video rounded-xl overflow-hidden border border-black/10">
+            <Image
               src={video.thumbnail}
               alt={video.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
 
+          {/* Content */}
           <div>
             <h3 className="text-3xl font-bold mb-4 group-hover:text-purple-400 transition">
               {video.title}

@@ -8,7 +8,7 @@ export async function fetchYouTubeVideos() {
       return [];
     }
 
-    const url =
+    const searchUrl =
       `https://www.googleapis.com/youtube/v3/search` +
       `?key=${API_KEY}` +
       `&channelId=${CHANNEL_ID}` +
@@ -16,25 +16,40 @@ export async function fetchYouTubeVideos() {
       `&order=date` +
       `&maxResults=12`;
 
-    const res = await fetch(url, {
+    const res = await fetch(searchUrl, {
       next: { revalidate: 3600 },
     });
 
     if (!res.ok) {
-      console.error("YouTube request failed");
+      const errorText = await res.text();
+      console.error("YouTube request failed:", errorText);
       return [];
     }
 
     const data = await res.json();
 
-    return data.items
-      ?.filter((item: any) => item.id?.kind === "youtube#video")
-      .map((item: any) => ({
-        id: item.id.videoId,
-        title: item.snippet.title,
-        thumbnail: item.snippet.thumbnails?.high?.url,
-        publishedAt: item.snippet.publishedAt,
-      })) ?? [];
+    if (!data.items) return [];
+
+    const videos = data.items
+      .filter((item: any) => item.id?.kind === "youtube#video")
+      .map((item: any) => {
+        const videoId = item.id.videoId;
+
+        return {
+          id: videoId,
+          title: item.snippet.title,
+          publishedAt: item.snippet.publishedAt,
+
+          // 🔥 High quality thumbnail logic
+          thumbnail:
+            item.snippet.thumbnails?.maxres?.url ||
+            item.snippet.thumbnails?.standard?.url ||
+            item.snippet.thumbnails?.high?.url ||
+            `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        };
+      });
+
+    return videos;
 
   } catch (err) {
     console.error("YouTube fetch crash:", err);

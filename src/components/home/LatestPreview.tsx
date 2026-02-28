@@ -1,5 +1,6 @@
 import Container from "../layout/Container";
 import Link from "next/link";
+import Image from "next/image";
 import { fetchYouTubeVideos } from "@/src/lib/youtube";
 
 interface Video {
@@ -47,15 +48,36 @@ export default async function LatestPreview() {
                 rel="noopener noreferrer"
                 className="group"
               >
-                <div className="aspect-video rounded-lg overflow-hidden mb-4">
-                  <img
+                {/* Thumbnail */}
+                <div className="relative aspect-video rounded-lg overflow-hidden mb-4">
+                  <Image
                     src={video.thumbnail}
                     alt={video.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+
+                  {/* Subtle overlay for depth */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80 group-hover:opacity-100 transition" />
+
+                  {/* Play icon on hover */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                    <div className="bg-white/90 rounded-full p-4 shadow-lg">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-6 h-6 text-black"
+                      >
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
 
-                <h3 className="text-sm font-medium text-gray-800 group-hover:text-red-600 transition">
+                {/* Title */}
+                <h3 className="text-sm font-medium text-gray-800 group-hover:text-red-600 transition line-clamp-2">
                   {video.title}
                 </h3>
               </a>

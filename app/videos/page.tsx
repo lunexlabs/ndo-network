@@ -30,7 +30,7 @@ export default async function VideosPage() {
     return (
       <section className="py-32">
         <Container>
-          <h1 className="text-4xl font-bold mb-16">Latest Videos</h1>
+          <h1 className="text-4xl font-bold mb-16">Latest Watch</h1>
           <p className="text-black/60">No videos available right now.</p>
         </Container>
       </section>
