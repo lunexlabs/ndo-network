@@ -25,13 +25,13 @@ export default function FeaturedVideo({ video }: { video: Video }) {
       </h2>
 
       <a
-        href={`https://youtube.com/watch?v=tlrzWQkskWs`}
+        href={`https://youtube.com/watch?v=${video.id}`}
         target="_blank"
         rel="noopener noreferrer"
         className="group block"
       >
         <div className="grid lg:grid-cols-2 gap-10 items-center">
-          
+
           {/* Thumbnail */}
           <div className="relative aspect-video rounded-xl overflow-hidden border border-black/10">
             <Image
@@ -58,6 +58,7 @@ export default function FeaturedVideo({ video }: { video: Video }) {
               Watch on YouTube →
             </span>
           </div>
+
         </div>
       </a>
     </div>
