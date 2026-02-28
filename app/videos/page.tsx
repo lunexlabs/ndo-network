@@ -1,22 +1,12 @@
 import Container from "../../src/components/layout/Container";
 import FeaturedVideo from "../../src/components/videos/FeaturedVideo";
+import { fetchYouTubeVideos } from "@/src/lib/youtube";
 
 interface Video {
   id: string;
   title: string;
   thumbnail: string;
   publishedAt: string;
-}
-
-async function getVideos(): Promise<Video[]> {
-  const res = await fetch("http://localhost:3000/api/youtube", {
-    cache: "no-store",
-  });
-
-  if (!res.ok) return [];
-
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
 }
 
 function formatDate(date: string) {
@@ -28,15 +18,24 @@ function formatDate(date: string) {
 }
 
 function getBadge(title: string) {
-  if (title.toLowerCase().includes("live"))
-    return "LIVE";
-  if (title.toLowerCase().includes("actv"))
-    return "ACTV";
+  if (title.toLowerCase().includes("live")) return "LIVE";
+  if (title.toLowerCase().includes("actv")) return "ACTV";
   return null;
 }
 
 export default async function VideosPage() {
-  const videos = await getVideos();
+  const videos: Video[] = await fetchYouTubeVideos();
+
+  if (!videos || videos.length === 0) {
+    return (
+      <section className="py-32">
+        <Container>
+          <h1 className="text-4xl font-bold mb-16">Latest Videos</h1>
+          <p className="text-black/60">No videos available right now.</p>
+        </Container>
+      </section>
+    );
+  }
 
   const [featured, ...rest] = videos;
 
@@ -45,10 +44,10 @@ export default async function VideosPage() {
       <Container>
         <h1 className="text-4xl font-bold mb-16">Latest Videos</h1>
 
-        <FeaturedVideo video={featured} />
+        {featured && <FeaturedVideo video={featured} />}
 
         <div className="grid md:grid-cols-3 gap-10">
-          {rest.map((video) => {
+          {rest.map((video: Video) => {
             const badge = getBadge(video.title);
 
             return (

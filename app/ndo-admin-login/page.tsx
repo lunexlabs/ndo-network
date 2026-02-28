@@ -59,7 +59,7 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-black text-white flex items-center justify-center">
       <div className="bg-white/5 border border-white/10 p-10 rounded-xl w-96 backdrop-blur-md">
         <h1 className="text-2xl font-bold mb-6 text-amber-400">
-          ACTV Admin Login
+          NDO Network Admin Login
         </h1>
 
         {error && (
