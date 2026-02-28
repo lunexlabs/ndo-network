@@ -1,27 +1,54 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
 
 export async function POST(req: Request) {
-  const { season, email } = await req.json();
+  try {
+    const supabaseUrl = process.env.SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  const { data } = await supabase
-    .from("actv_submissions")
-    .select("status")
-    .eq("season", season)
-    .eq("email", email)
-    .maybeSingle();
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error("Supabase environment variables are missing")
+    }
 
-  if (data) {
-    return NextResponse.json({
-      exists: true,
-      status: data.status,
-    });
+    const supabase = createClient(supabaseUrl, serviceRoleKey)
+
+    const { season, email } = await req.json()
+
+    if (!season || !email) {
+      return NextResponse.json(
+        { error: "Missing season or email" },
+        { status: 400 }
+      )
+    }
+
+    const { data, error } = await supabase
+      .from("actv_submissions")
+      .select("status")
+      .eq("season", season)
+      .eq("email", email)
+      .maybeSingle()
+
+    if (error) {
+      console.error("Supabase error:", error)
+      return NextResponse.json(
+        { error: "Database query failed" },
+        { status: 500 }
+      )
+    }
+
+    if (data) {
+      return NextResponse.json({
+        exists: true,
+        status: data.status,
+      })
+    }
+
+    return NextResponse.json({ exists: false })
+  } catch (err) {
+    console.error("API error:", err)
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    )
   }
-
-  return NextResponse.json({ exists: false });
 }
