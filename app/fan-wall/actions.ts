@@ -10,8 +10,10 @@ function getServerSupabase() {
   const url = process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+  // During static build, env vars may not exist yet.
   if (!url || !serviceKey) {
-    throw new Error("Missing Supabase server environment variables");
+    console.warn("Supabase server env vars missing (build phase)");
+    return null;
   }
 
   return createClient(url, serviceKey);
@@ -31,7 +33,12 @@ function clean(value: FormDataEntryValue | null) {
 
 export async function submitFanMail(formData: FormData) {
   try {
-    const supabase = getServerSupabase(); // ✅ create inside handler
+    const supabase = getServerSupabase();
+
+    // If build phase, do not crash
+    if (!supabase) {
+      return { error: "Server not ready." };
+    }
 
     const name = clean(formData.get("name"));
     const city = clean(formData.get("city"));
@@ -56,6 +63,7 @@ export async function submitFanMail(formData: FormData) {
 
     /* --------------------------
        BASIC RATE LIMIT
+       (Max 3 submissions per minute per name)
     --------------------------- */
 
     const oneMinuteAgo = new Date(
@@ -110,7 +118,12 @@ export async function submitFanMail(formData: FormData) {
 
 export async function getApprovedMessages() {
   try {
-    const supabase = getServerSupabase(); // ✅ create inside handler
+    const supabase = getServerSupabase();
+
+    // During static build, return empty list safely
+    if (!supabase) {
+      return [];
+    }
 
     const { data, error } = await supabase
       .from("fan_wall_messages")

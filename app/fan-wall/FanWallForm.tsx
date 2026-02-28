@@ -59,6 +59,7 @@ export default function FanWallForm() {
             Country
           </label>
           <select
+            title="Please select your country"
             name="country"
             required
             className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-black transition"
@@ -85,6 +86,7 @@ export default function FanWallForm() {
           </label>
 
           <textarea
+            title="Please enter your message"
             name="message"
             required
             maxLength={300}
@@ -124,6 +126,7 @@ function Input({
         {label}
       </label>
       <input
+        title="Please enter your name"
         name={name}
         required
         className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-1 focus:ring-black transition"

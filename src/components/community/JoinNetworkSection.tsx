@@ -18,6 +18,7 @@ export default function JoinNetworkSection() {
             <a
               href="https://discord.gg/3WkK9GUc8B"
               target="_blank"
+              rel="noopener noreferrer"
               className="bg-blue-600 hover:bg-blue-500 transition px-8 py-4 rounded-md text-sm font-medium text-white"
             >
               Join Discord
