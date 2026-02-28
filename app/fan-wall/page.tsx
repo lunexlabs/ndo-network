@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Container from "../../src/components/layout/Container";
 import { getApprovedMessages } from "./actions";
 import FanWallForm from "./FanWallForm";
@@ -8,23 +10,17 @@ export default async function FanWallPage() {
   return (
     <>
       {/* =========================
-          HERO (Image Background
-          Same Layout As Before)
+          HERO
       ========================== */}
       <section className="relative py-32 border-b border-gray-200 overflow-hidden">
-
-        {/* Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: "url('/images/fans/fans-header.jpg')",
           }}
         />
-
-        {/* Dark Overlay */}
         <div className="absolute inset-0 bg-black/60" />
 
-        {/* Content (UNCHANGED POSITIONING) */}
         <Container>
           <div className="relative max-w-3xl">
             <span className="text-sm uppercase tracking-widest text-blue-300 mb-6 block">
@@ -42,18 +38,14 @@ export default async function FanWallPage() {
         </Container>
       </section>
 
-      {/* =========================
-          FORM
-      ========================== */}
+      {/* FORM */}
       <section className="py-24 bg-gray-50 border-b border-gray-200">
         <Container>
           <FanWallForm />
         </Container>
       </section>
 
-      {/* =========================
-          WALL
-      ========================== */}
+      {/* WALL */}
       <section className="py-28 bg-white">
         <Container>
           <h2 className="text-3xl font-bold text-gray-900 mb-16 text-center">
