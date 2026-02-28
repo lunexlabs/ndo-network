@@ -37,7 +37,7 @@ export async function submitContact(formData: FormData) {
       from: "NDO Network <ndo@ndo.network>",
       to: recipient,
       subject: `New ${category} Inquiry`,
-      reply_to: email,
+      replyTo: email,
       html: `
         <h2>New Contact Submission</h2>
         <p><strong>Name:</strong> ${name}</p>
