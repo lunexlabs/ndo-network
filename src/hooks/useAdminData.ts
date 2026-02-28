@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/src/lib/supabaseClient";
+import { getSupabaseClient } from "../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
 export function useAdminData() {
@@ -9,15 +9,19 @@ export function useAdminData() {
 
   const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [submissions, setSubmissions] = useState([]);
-  const [fanMessages, setFanMessages] = useState([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [fanMessages, setFanMessages] = useState<any[]>([]);
 
   useEffect(() => {
     checkSession();
   }, []);
 
   async function checkSession() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const supabase = getSupabaseClient();
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
     if (!session) {
       router.push("/ndo-admin-login");
