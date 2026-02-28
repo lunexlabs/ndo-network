@@ -7,16 +7,41 @@ interface Video {
   thumbnail: string;
 }
 
+/* ----------------------------------
+   SAFE SERVER FETCH
+----------------------------------- */
+
 async function getVideos(): Promise<Video[]> {
-  const res = await fetch("http://localhost:3000/api/youtube", {
-    cache: "no-store",
-  });
+  try {
+    // ✅ Use relative path (works in dev + production)
+    const res = await fetch("/api/youtube", {
+      cache: "no-store",
+    });
 
-  if (!res.ok) return [];
+    if (!res.ok) {
+      console.error("YouTube API response not OK:", res.status);
+      return [];
+    }
 
-  const data = await res.json();
-  return Array.isArray(data) ? data.slice(0, 3) : [];
+    const data = await res.json();
+
+    if (!Array.isArray(data)) {
+      console.error("YouTube API returned unexpected data");
+      return [];
+    }
+
+    return data.slice(0, 3);
+
+  } catch (err) {
+    // ✅ Prevent SSR crash
+    console.error("YouTube fetch failed:", err);
+    return [];
+  }
 }
+
+/* ----------------------------------
+   COMPONENT
+----------------------------------- */
 
 export default async function LatestPreview() {
   const videos = await getVideos();
@@ -36,35 +61,41 @@ export default async function LatestPreview() {
 
           <Link
             href="/videos"
-            className="text-sm font-medium text-black-600 hover:text-red-500 transition"
+            className="text-sm font-medium text-black hover:text-red-500 transition"
           >
             View All →
           </Link>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {videos.map((video) => (
-            <a
-              key={video.id}
-              href={`https://youtube.com/watch?v=${video.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group"
-            >
-              <div className="aspect-video rounded-lg overflow-hidden mb-4">
-                <img
-                  src={video.thumbnail}
-                  alt={video.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition"
-                />
-              </div>
+        {videos.length === 0 ? (
+          <p className="text-gray-500 text-center">
+            No videos available right now.
+          </p>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-8">
+            {videos.map((video) => (
+              <a
+                key={video.id}
+                href={`https://youtube.com/watch?v=${video.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group"
+              >
+                <div className="aspect-video rounded-lg overflow-hidden mb-4">
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition"
+                  />
+                </div>
 
-              <h3 className="text-sm font-medium text-gray-800 group-hover:text-red-600 transition">
-                {video.title}
-              </h3>
-            </a>
-          ))}
-        </div>
+                <h3 className="text-sm font-medium text-gray-800 group-hover:text-red-600 transition">
+                  {video.title}
+                </h3>
+              </a>
+            ))}
+          </div>
+        )}
 
         {/* Subscribe CTA */}
         <div className="mt-16 text-center">
