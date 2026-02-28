@@ -2,8 +2,15 @@ import Container from "../layout/Container";
 import Link from "next/link";
 import { fetchYouTubeVideos } from "@/src/lib/youtube";
 
+interface Video {
+  id: string;
+  title: string;
+  thumbnail: string;
+  publishedAt?: string;
+}
+
 export default async function LatestPreview() {
-  const videos = await fetchYouTubeVideos();
+  const videos: Video[] = await fetchYouTubeVideos();
 
   return (
     <section className="py-28 bg-gray-50 border-t border-gray-200">
@@ -32,7 +39,7 @@ export default async function LatestPreview() {
           </p>
         ) : (
           <div className="grid md:grid-cols-3 gap-8">
-            {videos.slice(0, 3).map((video) => (
+            {videos.slice(0, 3).map((video: Video) => (
               <a
                 key={video.id}
                 href={`https://youtube.com/watch?v=${video.id}`}
