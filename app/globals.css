@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* Light theme base */
+html,
+body {
+  min-height: 100vh;
+  background-color: #fafcff; /* soft gray */
+  color: #111111;
+  font-family: Arial, Helvetica, sans-serif;
+}
