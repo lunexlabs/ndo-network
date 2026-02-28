@@ -5,43 +5,35 @@ interface Video {
   id: string;
   title: string;
   thumbnail: string;
+  publishedAt?: string;
 }
 
 /* ----------------------------------
-   SAFE SERVER FETCH
+   CACHED SERVER FETCH
 ----------------------------------- */
 
 async function getVideos(): Promise<Video[]> {
   try {
-    // ✅ Use relative path (works in dev + production)
     const res = await fetch("/api/youtube", {
-      cache: "no-store",
+      next: { revalidate: 3600 }, // 1 hour cache
     });
 
     if (!res.ok) {
-      console.error("YouTube API response not OK:", res.status);
+      console.error("YouTube fetch failed:", res.status);
       return [];
     }
 
     const data = await res.json();
 
-    if (!Array.isArray(data)) {
-      console.error("YouTube API returned unexpected data");
-      return [];
-    }
+    if (!Array.isArray(data)) return [];
 
     return data.slice(0, 3);
 
   } catch (err) {
-    // ✅ Prevent SSR crash
-    console.error("YouTube fetch failed:", err);
+    console.error("YouTube fetch crash:", err);
     return [];
   }
 }
-
-/* ----------------------------------
-   COMPONENT
------------------------------------ */
 
 export default async function LatestPreview() {
   const videos = await getVideos();
@@ -97,7 +89,6 @@ export default async function LatestPreview() {
           </div>
         )}
 
-        {/* Subscribe CTA */}
         <div className="mt-16 text-center">
           <a
             href="https://youtube.com/@playwithndo"
