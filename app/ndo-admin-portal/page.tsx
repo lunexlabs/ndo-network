@@ -24,7 +24,7 @@ type FanFilter = "pending" | "approved";
 
 export default function AdminPortal() {
   const router = useRouter();
-  const supabase = getSupabaseClient(); // ✅ initialize here
+  const supabase = getSupabaseClient();
 
   const {
     authorized,
@@ -35,17 +35,11 @@ export default function AdminPortal() {
   } = useAdminData();
 
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
-
-  const [tab, setTab] = useState<"submissions" | "fanwall">(
-    "submissions"
-  );
-
+  const [tab, setTab] = useState<"submissions" | "fanwall">("submissions");
   const [submissionFilter, setSubmissionFilter] =
     useState<SubmissionFilter>("all");
-
   const [fanFilter, setFanFilter] =
     useState<FanFilter>("pending");
-
   const [search, setSearch] = useState("");
 
   /* -----------------------------
@@ -54,32 +48,30 @@ export default function AdminPortal() {
 
   useEffect(() => {
     async function getAdmin() {
-      const { data } = await supabase.auth.getSession();
-      if (data.session?.user?.email) {
-        setAdminEmail(data.session.user.email);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user?.email) {
+        setAdminEmail(session.user.email);
       }
     }
+
     getAdmin();
   }, [supabase]);
 
   /* -----------------------------
-     FILTERED SUBMISSIONS
+     FILTER SUBMISSIONS
   ------------------------------ */
 
   const filteredSubmissions = useMemo(() => {
     if (!submissions) return [];
 
     let filtered = submissions.filter((s: any) => {
-      if (submissionFilter === "archived")
-        return s.is_archived;
+      if (submissionFilter === "archived") return s.is_archived;
+      if (submissionFilter === "all") return !s.is_archived;
 
-      if (submissionFilter === "all")
-        return !s.is_archived;
-
-      return (
-        s.status === submissionFilter &&
-        !s.is_archived
-      );
+      return s.status === submissionFilter && !s.is_archived;
     });
 
     if (search.trim()) {
@@ -96,7 +88,7 @@ export default function AdminPortal() {
   }, [submissions, submissionFilter, search]);
 
   /* -----------------------------
-     FILTERED FAN MESSAGES
+     FILTER FAN MESSAGES
   ------------------------------ */
 
   const filteredFanMessages = useMemo(() => {
@@ -121,7 +113,7 @@ export default function AdminPortal() {
   }, [fanMessages, fanFilter, search]);
 
   /* -----------------------------
-     AUTH
+     LOGOUT
   ------------------------------ */
 
   async function logout() {
@@ -129,8 +121,9 @@ export default function AdminPortal() {
     router.push("/");
   }
 
-  if (loading) return <div className="p-10">Loading...</div>;
-  if (!authorized) return null;
+  /* -----------------------------
+     POST HELPER
+  ------------------------------ */
 
   async function post(endpoint: string, body: any) {
     await fetch(endpoint, {
@@ -138,12 +131,110 @@ export default function AdminPortal() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...body, adminEmail }),
     });
+
     refresh();
   }
 
+  /* -----------------------------
+     AUTH GUARDS
+  ------------------------------ */
+
+  if (loading) return <div className="p-10">Loading...</div>;
+  if (!authorized) return null;
+
+  /* -----------------------------
+     UI
+  ------------------------------ */
+
   return (
     <AdminLayout onLogout={logout}>
-      {/* UI unchanged */}
+      <div className="flex gap-6 mb-6 border-b pb-2">
+        <button
+          onClick={() => setTab("submissions")}
+          className={
+            tab === "submissions"
+              ? "font-semibold border-b-2 border-black pb-2"
+              : "text-gray-500"
+          }
+        >
+          Island Submissions
+        </button>
+
+        <button
+          onClick={() => setTab("fanwall")}
+          className={
+            tab === "fanwall"
+              ? "font-semibold border-b-2 border-black pb-2"
+              : "text-gray-500"
+          }
+        >
+          Fan Wall Messages
+        </button>
+      </div>
+
+      <AdminSearch value={search} onChange={setSearch} />
+
+      {tab === "submissions" && (
+        <>
+          <SubmissionFilters
+            value={submissionFilter}
+            onChange={setSubmissionFilter}
+          />
+
+          <SubmissionTable
+            data={filteredSubmissions}
+            onApprove={(id) =>
+              post("/api/admin/update-submission-status", {
+                id,
+                status: "approved",
+              })
+            }
+            onReject={(id) =>
+              post("/api/admin/update-submission-status", {
+                id,
+                status: "rejected",
+              })
+            }
+            onArchive={(id) =>
+              post("/api/admin/archive-submission", { id })
+            }
+            onUnarchive={(id) =>
+              post("/api/admin/unarchive-submission", { id })
+            }
+            onDelete={(id) =>
+              post("/api/admin/delete-submission", { id })
+            }
+          />
+        </>
+      )}
+
+      {tab === "fanwall" && (
+        <>
+          <FanFilters
+            value={fanFilter}
+            onChange={setFanFilter}
+          />
+
+          <FanTable
+            data={filteredFanMessages}
+            onApprove={(id) =>
+              post("/api/admin/update-fanwall-status", {
+                id,
+                status: "approved",
+              })
+            }
+            onReject={(id) =>
+              post("/api/admin/update-fanwall-status", {
+                id,
+                status: "rejected",
+              })
+            }
+            onDelete={(id) =>
+              post("/api/admin/delete-fanwall", { id })
+            }
+          />
+        </>
+      )}
     </AdminLayout>
   );
 }
