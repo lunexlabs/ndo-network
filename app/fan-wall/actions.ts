@@ -7,12 +7,11 @@ import { createClient } from "@supabase/supabase-js";
 ----------------------------------- */
 
 function getServerSupabase() {
-  const url = process.env.SUPABASE_URL;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  // During static build, env vars may not exist yet.
   if (!url || !serviceKey) {
-    console.warn("Supabase server env vars missing (build phase)");
+    console.warn("Supabase env vars missing (likely build phase)");
     return null;
   }
 
@@ -33,10 +32,13 @@ function clean(value: FormDataEntryValue | null) {
 
 export async function submitFanMail(formData: FormData) {
   try {
+
+    console.log("Fan mail submission received");
+
     const supabase = getServerSupabase();
 
-    // If build phase, do not crash
     if (!supabase) {
+      console.warn("Supabase client unavailable");
       return { error: "Server not ready." };
     }
 
@@ -62,32 +64,34 @@ export async function submitFanMail(formData: FormData) {
     }
 
     /* --------------------------
-       BASIC RATE LIMIT
+       RATE LIMIT
        (Max 3 submissions per minute per name)
     --------------------------- */
 
-    const oneMinuteAgo = new Date(
-      Date.now() - 60 * 1000
-    ).toISOString();
+    const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
 
-    const { count } = await supabase
+    const { count, error: rateError } = await supabase
       .from("fan_wall_messages")
       .select("*", { count: "exact", head: true })
       .eq("name", name)
       .gte("created_at", oneMinuteAgo);
 
+    if (rateError) {
+      console.error("Rate limit query failed:", rateError);
+      return { error: "Unable to verify submission limits." };
+    }
+
     if (count && count >= 3) {
       return {
-        error:
-          "Too many submissions. Please wait before posting again.",
+        error: "Too many submissions. Please wait before posting again."
       };
     }
 
     /* --------------------------
-       INSERT
+       INSERT MESSAGE
     --------------------------- */
 
-    const { error } = await supabase
+    const { error: insertError } = await supabase
       .from("fan_wall_messages")
       .insert([
         {
@@ -95,14 +99,16 @@ export async function submitFanMail(formData: FormData) {
           city,
           country,
           message,
-          status: "pending",
-        },
+          status: "pending"
+        }
       ]);
 
-    if (error) {
-      console.error("Fan wall insert error:", error);
+    if (insertError) {
+      console.error("Fan wall insert error:", insertError);
       return { error: "Submission failed." };
     }
+
+    console.log("Fan wall submission saved");
 
     return { success: true };
 
@@ -118,10 +124,11 @@ export async function submitFanMail(formData: FormData) {
 
 export async function getApprovedMessages() {
   try {
+
     const supabase = getServerSupabase();
 
-    // During static build, return empty list safely
     if (!supabase) {
+      console.warn("Supabase unavailable during build");
       return [];
     }
 
