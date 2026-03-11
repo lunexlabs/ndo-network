@@ -12,16 +12,21 @@ function slugify(value: string) {
 
 export async function POST(req: Request) {
   try {
-    // 🔒 Validate environment variables FIRST
-    const supabaseUrl = process.env.SUPABASE_URL
+    console.log("ACTV submission started")
+
+    /* ----------------------------------
+       ENVIRONMENT CHECK
+    ---------------------------------- */
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     const resendKey = process.env.RESEND_API_KEY
 
     if (!supabaseUrl || !serviceRoleKey) {
+      console.error("Missing Supabase env variables")
       throw new Error("Missing Supabase environment variables")
     }
 
-    // ✅ Initialize inside handler (critical)
     const supabase = createClient(supabaseUrl, serviceRoleKey)
     const resend = resendKey ? new Resend(resendKey) : null
 
@@ -53,8 +58,8 @@ export async function POST(req: Request) {
     if (existing) {
       return NextResponse.json(
         {
-          error: "You have already submitted for this season.",
-          status: existing.status,
+          error: "You already submitted for this season.",
+          status: existing.status
         },
         { status: 400 }
       )
@@ -64,22 +69,34 @@ export async function POST(req: Request) {
        UPLOAD SCREENSHOTS
     ---------------------------------- */
 
-    const screenshots = formData.getAll("screenshots") as File[]
+    const screenshots = (formData.getAll("screenshots") || []) as File[]
     const uploadedUrls: string[] = []
 
     const seasonSlug = slugify(season)
     const creatorSlug = slugify(creatorName)
     const islandSlug = slugify(islandName)
 
-    for (let file of screenshots) {
+    for (const file of screenshots) {
+
+      if (!file || file.size === 0) continue
+
+      const arrayBuffer = await file.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+
       const fileName = `${Date.now()}-${slugify(file.name)}`
       const filePath = `${seasonSlug}/${creatorSlug}/${islandSlug}/${fileName}`
 
       const { error } = await supabase.storage
         .from("actv-submissions")
-        .upload(filePath, file, { upsert: false })
+        .upload(filePath, buffer, {
+          contentType: file.type,
+          upsert: false
+        })
 
-      if (error) throw error
+      if (error) {
+        console.error("Upload error:", error)
+        throw error
+      }
 
       const { data } = supabase.storage
         .from("actv-submissions")
@@ -89,7 +106,7 @@ export async function POST(req: Request) {
     }
 
     /* ----------------------------------
-       INSERT INTO DATABASE
+       INSERT DATABASE RECORD
     ---------------------------------- */
 
     const submission = {
@@ -103,7 +120,7 @@ export async function POST(req: Request) {
       email,
       screenshots: uploadedUrls,
       status: "pending",
-      created_at: new Date(),
+      created_at: new Date().toISOString()
     }
 
     const { error: insertError } = await supabase
@@ -111,12 +128,7 @@ export async function POST(req: Request) {
       .insert([submission])
 
     if (insertError) {
-      if (insertError.code === "23505") {
-        return NextResponse.json(
-          { error: "You have already submitted for this season." },
-          { status: 400 }
-        )
-      }
+      console.error("Insert error:", insertError)
       throw insertError
     }
 
@@ -129,15 +141,13 @@ export async function POST(req: Request) {
         await resend.emails.send({
           from: "ACTV <noreply@ndo.network>",
           to: email,
-          subject: "Your ACTV Submission Was Received",
+          subject: "ACTV Submission Received",
           html: `
             <h2>Submission Received 🎉</h2>
             <p>Your island "<strong>${islandName}</strong>" has been submitted for <strong>${season}</strong>.</p>
-            <p>Status: <strong>Pending Review</strong></p>
-            <p>We’ll reach out if selected.</p>
-          `,
+            <p>Status: Pending Review</p>
+          `
         })
-        console.log("Email sent to:", email)
       } catch (emailError) {
         console.error("Email failed:", emailError)
       }
@@ -163,15 +173,13 @@ export async function POST(req: Request) {
                   { name: "Island", value: islandName },
                   { name: "Season", value: season },
                   { name: "Creator", value: creatorName },
-                  { name: "Email", value: email },
-                  { name: "Status", value: "Pending" },
+                  { name: "Email", value: email }
                 ],
-                timestamp: new Date().toISOString(),
-              },
-            ],
-          }),
+                timestamp: new Date().toISOString()
+              }
+            ]
+          })
         })
-        console.log("Discord webhook sent.")
       } catch (discordError) {
         console.error("Discord webhook failed:", discordError)
       }
@@ -179,8 +187,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true })
 
-  } catch (err: any) {
+  } catch (err) {
     console.error("Submission error:", err)
+
     return NextResponse.json(
       { error: "Server error during submission." },
       { status: 500 }

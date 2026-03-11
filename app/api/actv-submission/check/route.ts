@@ -3,16 +3,19 @@ import { createClient } from "@supabase/supabase-js"
 
 export async function POST(req: Request) {
   try {
-    const supabaseUrl = process.env.SUPABASE_URL
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
     if (!supabaseUrl || !serviceRoleKey) {
-      throw new Error("Supabase environment variables are missing")
+      throw new Error("Supabase environment variables missing")
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-    const { season, email } = await req.json()
+    const body = await req.json()
+
+    const { season, email } = body
 
     if (!season || !email) {
       return NextResponse.json(
@@ -30,22 +33,21 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Supabase error:", error)
-      return NextResponse.json(
-        { error: "Database query failed" },
-        { status: 500 }
-      )
+      throw error
     }
 
     if (data) {
       return NextResponse.json({
         exists: true,
-        status: data.status,
+        status: data.status
       })
     }
 
     return NextResponse.json({ exists: false })
+
   } catch (err) {
-    console.error("API error:", err)
+    console.error("Check API error:", err)
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
