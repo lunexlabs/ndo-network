@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import Container from "../../src/components/layout/Container";
+import Container from "../../../src/components/layout/Container";
 import { getNotes } from "./actions";
 import FanWallModalTrigger from "./FanWallModalTrigger";
 import type { Metadata } from "next";

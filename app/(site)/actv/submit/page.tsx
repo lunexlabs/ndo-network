@@ -1,5 +1,5 @@
-import Container from "../../../src/components/layout/Container";
-import SubmissionForm from "../../../src/components/actv/SubmissionForm";
+import Container from "../../../../src/components/layout/Container";
+import SubmissionForm from "../../../../src/components/actv/SubmissionForm";
 
 export default function ACTVSubmitPage() {
   return (

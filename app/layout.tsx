@@ -1,9 +1,8 @@
-import "./globals.css";
+import "./(site)/globals.css";
 import type { Metadata } from "next";
-import NetworkLayout from "../src/components/layout/NetworkLayout";
 
 export const metadata: Metadata = {
-  title: "NDO",
+  title: "NDO Network",
   description: "Official network platform for NDO shows and gaming series",
 };
 
@@ -15,7 +14,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <NetworkLayout>{children}</NetworkLayout>
+        {children}
       </body>
     </html>
   );
