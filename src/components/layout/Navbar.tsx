@@ -98,7 +98,7 @@ export default function Navbar() {
                     href={link.href}
                     className="flex items-center gap-2 whitespace-nowrap hover:text-black transition"
                   >
-                    <Icon size={17} className={link.color} />
+                    <Icon size={17} />
                     {link.label}
                   </Link>
                 );
@@ -204,7 +204,7 @@ export default function Navbar() {
                     onClick={() => setIsOpen(false)}
                     className="flex items-center gap-3"
                   >
-                    <Icon size={20} className={link.color} />
+                    <Icon size={20} />
                     {link.label}
                   </Link>
                 );
