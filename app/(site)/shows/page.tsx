@@ -1,6 +1,6 @@
-import Container from "../../src/components/layout/Container";
-import ShowsHero from "../../src/components/shows/ShowsHero";
-import ShowsGrid from "../../src/components/shows/ShowsGrid";
+import Container from "@/src/components/layout/Container";
+import ShowsHero from "@/src/components/shows/ShowsHero";
+import ShowsGrid from "@/src/components/shows/ShowsGrid";
 
 import type { Metadata } from "next";
 

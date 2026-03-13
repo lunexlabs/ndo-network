@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Container from "../../src/components/layout/Container";
+import Container from "@/src/components/layout/Container";
 import { submitContact } from "./actions";
 
 

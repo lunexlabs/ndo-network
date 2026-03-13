@@ -1,4 +1,4 @@
-import Container from "../../src/components/layout/Container";
+import Container from "@/src/components/layout/Container";
 import Link from "next/link";
 import type { Metadata } from "next";
 
