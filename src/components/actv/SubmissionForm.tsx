@@ -287,11 +287,11 @@ const validateStep1 = () => {
               value={form.theme}
               onChange={handleChange}
               options={[
-                "Cottagecore",
-                "Fantasy",
+                "Cottage Core",
+                "Fantasy Core",
                 "Modern",
-                "City",
-                "Natural",
+                "City Core",
+                "Normal Core",
                 "Other",
               ]}
             />

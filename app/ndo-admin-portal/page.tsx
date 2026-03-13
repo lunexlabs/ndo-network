@@ -2,16 +2,16 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getSupabaseClient } from "../../src/lib/supabaseClient";
+import { createClient } from "@/src/lib/supabase/client";
 
-import { useAdminData } from "../../src/hooks/useAdminData";
+import { useAdminData } from "@/src/hooks/useAdminData";
 
-import AdminLayout from "../../src/components/admin/AdminLayout";
-import SubmissionFilters from "../../src/components/admin/SubmissionFilters";
-import SubmissionTable from "../../src/components/admin/SubmissionTable";
-import FanFilters from "../../src/components/admin/FanFilters";
-import FanTable from "../../src/components/admin/FanTable";
-import AdminSearch from "../../src/components/admin/AdminSearch";
+import AdminLayout from "@/src/components/admin/AdminLayout";
+import SubmissionFilters from "@/src/components/admin/SubmissionFilters";
+import SubmissionTable from "@/src/components/admin/SubmissionTable";
+import FanFilters from "@/src/components/admin/FanFilters";
+import FanTable from "@/src/components/admin/FanTable";
+import AdminSearch from "@/src/components/admin/AdminSearch";
 
 type SubmissionFilter =
   | "all"
@@ -24,10 +24,9 @@ type FanFilter = "pending" | "approved";
 
 export default function AdminPortal() {
   const router = useRouter();
-  const supabase = getSupabaseClient();
+  const supabase = createClient();
 
   const {
-    authorized,
     loading,
     submissions,
     fanMessages,
@@ -36,10 +35,13 @@ export default function AdminPortal() {
 
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
   const [tab, setTab] = useState<"submissions" | "fanwall">("submissions");
+
   const [submissionFilter, setSubmissionFilter] =
     useState<SubmissionFilter>("all");
+
   const [fanFilter, setFanFilter] =
     useState<FanFilter>("pending");
+
   const [search, setSearch] = useState("");
 
   /* -----------------------------
@@ -49,11 +51,11 @@ export default function AdminPortal() {
   useEffect(() => {
     async function getAdmin() {
       const {
-        data: { session },
-      } = await supabase.auth.getSession();
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      if (session?.user?.email) {
-        setAdminEmail(session.user.email);
+      if (user?.email) {
+        setAdminEmail(user.email);
       }
     }
 
@@ -136,11 +138,12 @@ export default function AdminPortal() {
   }
 
   /* -----------------------------
-     AUTH GUARDS
+     LOADING STATE
   ------------------------------ */
 
-  if (loading) return <div className="p-10">Loading...</div>;
-  if (!authorized) return null;
+  if (loading) {
+    return <div className="p-10">Loading admin portal...</div>;
+  }
 
   /* -----------------------------
      UI

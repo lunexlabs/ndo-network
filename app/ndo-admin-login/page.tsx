@@ -2,28 +2,37 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getSupabaseClient } from "../../src/lib/supabaseClient";
+import { createClient } from "@/src/lib/supabase/client";
 
 export default function AdminLogin() {
   const router = useRouter();
-  const supabase = getSupabaseClient(); // ✅ create client safely here
+  const supabase = createClient();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   /* ---------------------------
-     AUTO REDIRECT IF LOGGED IN
+     AUTO REDIRECT IF ADMIN
   ---------------------------- */
 
   useEffect(() => {
     async function checkSession() {
       const {
-        data: { session },
-      } = await supabase.auth.getSession();
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      if (session) {
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.role === "admin" || profile?.role === "owner") {
         router.push("/ndo-admin-portal");
       }
     }
@@ -48,6 +57,33 @@ export default function AdminLogin() {
 
     if (error) {
       setError("Invalid email or password.");
+      setLoading(false);
+      return;
+    }
+
+    /* ---------------------------
+       VERIFY ADMIN ROLE
+    ---------------------------- */
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setError("Login failed.");
+      setLoading(false);
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "admin" && profile?.role !== "owner") {
+      await supabase.auth.signOut();
+      setError("This account does not have admin access.");
       setLoading(false);
       return;
     }

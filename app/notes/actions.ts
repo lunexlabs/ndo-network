@@ -27,13 +27,12 @@ function clean(value: FormDataEntryValue | null) {
 }
 
 /* ----------------------------------
-   SUBMIT FAN MAIL
+   SUBMIT NOTE
 ----------------------------------- */
 
-export async function submitFanMail(formData: FormData) {
+export async function submitNote(formData: FormData) {
   try {
-
-    console.log("Fan mail submission received");
+    console.log("Note submission received");
 
     const supabase = getServerSupabase();
 
@@ -65,7 +64,6 @@ export async function submitFanMail(formData: FormData) {
 
     /* --------------------------
        RATE LIMIT
-       (Max 3 submissions per minute per name)
     --------------------------- */
 
     const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
@@ -83,12 +81,12 @@ export async function submitFanMail(formData: FormData) {
 
     if (count && count >= 3) {
       return {
-        error: "Too many submissions. Please wait before posting again."
+        error: "Too many submissions. Please wait before posting again.",
       };
     }
 
     /* --------------------------
-       INSERT MESSAGE
+       INSERT NOTE
     --------------------------- */
 
     const { error: insertError } = await supabase
@@ -99,55 +97,94 @@ export async function submitFanMail(formData: FormData) {
           city,
           country,
           message,
-          status: "pending"
-        }
+          status: "pending",
+          is_featured: false,
+          is_pinned: false,
+        },
       ]);
 
     if (insertError) {
-      console.error("Fan wall insert error:", insertError);
+      console.error("Note insert error:", insertError);
       return { error: "Submission failed." };
     }
 
-    console.log("Fan wall submission saved");
+    console.log("Note saved");
 
     return { success: true };
 
   } catch (err) {
-    console.error("Fan wall server crash:", err);
+    console.error("Note server crash:", err);
     return { error: "Something went wrong." };
   }
 }
 
 /* ----------------------------------
-   GET APPROVED MESSAGES
+   GET NOTES
 ----------------------------------- */
 
-export async function getApprovedMessages() {
+export async function getNotes() {
   try {
-
     const supabase = getServerSupabase();
 
     if (!supabase) {
       console.warn("Supabase unavailable during build");
-      return [];
+      return {
+        pinned: [],
+        notes: [],
+      };
     }
 
     const { data, error } = await supabase
       .from("fan_wall_messages")
       .select("*")
       .eq("status", "approved")
-      .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(200);
 
     if (error) {
-      console.error("Fan wall fetch error:", error);
-      return [];
+      console.error("Notes fetch error:", error);
+      return {
+        pinned: [],
+        notes: [],
+      };
     }
 
-    return data ?? [];
+    if (!data) {
+      return {
+        pinned: [],
+        notes: [],
+      };
+    }
+
+    /* --------------------------
+       PINNED NOTES
+    --------------------------- */
+
+    const pinned = data.filter((note) => note.is_pinned);
+
+    /* --------------------------
+       COMMUNITY NOTES
+       (Featured + normal mixed)
+    --------------------------- */
+
+    const others = data.filter((note) => !note.is_pinned);
+
+    /* --------------------------
+       RANDOMIZE ORDER
+    --------------------------- */
+
+    const shuffled = others.sort(() => Math.random() - 0.5);
+
+    return {
+      pinned,
+      notes: shuffled,
+    };
 
   } catch (err) {
-    console.error("Fan wall fetch crash:", err);
-    return [];
+    console.error("Notes fetch crash:", err);
+
+    return {
+      pinned: [],
+      notes: [],
+    };
   }
 }
