@@ -1,5 +1,5 @@
-import Container from "../../src/components/layout/Container";
-import FeaturedVideo from "../../src/components/videos/FeaturedVideo";
+import Container from "@/src/components/layout/Container";
+import FeaturedVideo from "@/src/components/videos/FeaturedVideo";
 import { fetchYouTubeVideos } from "@/src/lib/youtube";
 import type { Metadata } from "next";
 
