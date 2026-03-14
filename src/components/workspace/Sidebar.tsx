@@ -12,6 +12,10 @@ import {
   Grid2x2
 } from "lucide-react";
 
+type SidebarProps = {
+  close?: () => void;
+};
+
 const version = process.env.NEXT_PUBLIC_WORKSPACE_VERSION || "0.1.0";
 
 const navItems = [
@@ -47,7 +51,7 @@ const navItems = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ close }: SidebarProps) {
 
   const pathname = usePathname();
 
@@ -99,6 +103,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={close} // closes sidebar on mobile
               className={`
                 relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm
                 transition
