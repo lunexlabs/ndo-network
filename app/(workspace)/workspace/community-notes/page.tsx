@@ -320,6 +320,7 @@ function ActionButton({icon:Icon,color,onClick}:any){
 
   return(
     <button
+      title="Click to toggle"
       onClick={onClick}
       className={`p-2 rounded text-white ${colors[color]}`}
     >

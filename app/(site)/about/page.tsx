@@ -108,7 +108,7 @@ export default function AboutPage() {
   Gaming has been a constant in his life since the 1980s, spanning multiple
   console generations, genres, and online ecosystems. What began as
   entertainment evolved into community, storytelling, and connection.
-  After losing hisperipheral vision, simply live streaming was no
+  After losing his peripheral vision, simply live streaming was no
   longer enough. He wanted permanence - a structured, intentional archive
   that documents the experiences he loves before his visual world fades
   further.
