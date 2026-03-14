@@ -126,12 +126,12 @@ export default function AccountPage() {
           {user && (
             <div className="mt-4 text-sm text-gray-500 space-y-1">
               <div>
-                <span className="font-medium text-gray-700">User ID:</span>{" "}
+                <span className="font-medium text-gray-700">UID:</span>{" "}
                 {user.id}
               </div>
 
               <div>
-                <span className="font-medium text-gray-700">Role:</span>{" "}
+                <span className="font-medium text-gray-700">Account Type:</span>{" "}
                 {role}
               </div>
             </div>

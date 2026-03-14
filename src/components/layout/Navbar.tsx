@@ -24,13 +24,14 @@ import AccountDropdown from "./AccountDropdown";
 const navLinks = [
   { href: "/shows", label: "SHOWS", icon: Tv },
   { href: "/videos", label: "WATCH", icon: PlayCircle },
-  { href: "/about", label: "ABOUT", icon: Info  },
+  { href: "/about", label: "ABOUT", icon: Info },
   { href: "/notes", label: "NOTES", icon: Notebook },
   { href: "/partners", label: "PARTNERS", icon: Handshake },
   { href: "/contact", label: "CONTACT", icon: Mail }
 ];
 
 export default function Navbar() {
+
   const supabase = createClient();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -38,19 +39,29 @@ export default function Navbar() {
   const [role, setRole] = useState<string | null>(null);
   const [isWorkspace, setIsWorkspace] = useState(false);
 
+  const [loadingUser, setLoadingUser] = useState(true);
+
   useEffect(() => {
+
     if (typeof window !== "undefined") {
       const host = window.location.hostname;
       if (host.startsWith("workspace.")) setIsWorkspace(true);
     }
 
-    async function loadUser() {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
+    /* ---------------------------
+       LOAD SESSION IMMEDIATELY
+    --------------------------- */
 
-      if (!user) return;
+    async function loadSession() {
 
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.user) {
+        setLoadingUser(false);
+        return;
+      }
+
+      const user = session.user;
       setUser(user);
 
       const { data } = await supabase
@@ -60,69 +71,95 @@ export default function Navbar() {
         .single();
 
       if (data?.role) setRole(data.role);
+
+      setLoadingUser(false);
     }
 
-    loadUser();
+    loadSession();
+
+    /* ---------------------------
+       LISTEN FOR LOGIN / LOGOUT
+    --------------------------- */
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+
+      if (session?.user) {
+        setUser(session.user);
+      } else {
+        setUser(null);
+      }
+
+    });
+
+    return () => subscription.unsubscribe();
+
   }, []);
 
   return (
     <header className="border-b border-gray-200 sticky top-0 z-50 bg-white/80 backdrop-blur-md">
 
       <Container>
+
         <div className="flex items-center justify-between h-16 w-full">
 
           {/* LOGO */}
+
           <Link href="/" className="flex items-center gap-3 shrink-0">
+
             <Image
               src="/ndo-logo.svg"
               alt="NDO Logo"
-              width={28}
-              height={28}
+              width={26}
+              height={26}
               priority
             />
-            <span className="font-bold text-xl tracking-tight whitespace-nowrap">
+
+            <span className="font-bold text-lg tracking-tight whitespace-nowrap">
               NDO
             </span>
+
           </Link>
 
+
           {/* CENTER NAV */}
+
           {!isWorkspace && (
-            <nav className="hidden lg:flex flex-1 items-center justify-center gap-8 text-sm font-medium text-gray-700">
+
+            <nav className="hidden lg:flex flex-1 items-center justify-center gap-7 text-xs font-medium text-gray-700">
 
               {navLinks.map((link) => {
+
                 const Icon = link.icon;
 
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="flex items-center gap-2 whitespace-nowrap hover:text-black transition"
+                    className="flex items-center gap-1.5 whitespace-nowrap hover:text-black transition"
                   >
-                    <Icon size={17} />
+                    <Icon size={15} />
                     {link.label}
                   </Link>
                 );
+
               })}
 
-              {(role === "admin" || role === "owner") && (
-                <a
-                  href="https://workspace.ndo.network"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-red-600 font-semibold"
-                >
-                  <Settings size={17} className="text-red-600" />
-                  ADMIN
-                </a>
-              )}
 
             </nav>
+
           )}
 
+
           {/* RIGHT SIDE */}
+
           <div className="flex items-center gap-5 shrink-0">
 
+            {/* SOCIAL ICONS */}
+
             {!isWorkspace && (
+
               <div className="hidden md:flex items-center gap-4">
 
                 <a
@@ -131,7 +168,7 @@ export default function Navbar() {
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  <FaYoutube size={18} className="hover:text-red-600" />
+                  <FaYoutube size={17} className="hover:text-red-600 transition" />
                 </a>
 
                 <a
@@ -140,22 +177,29 @@ export default function Navbar() {
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  <FaDiscord size={18} className="hover:text-indigo-600" />
+                  <FaDiscord size={17} className="hover:text-indigo-600 transition" />
                 </a>
 
               </div>
+
             )}
 
-            {user ? (
+
+            {/* ACCOUNT AREA */}
+
+            {loadingUser ? null : user ? (
               <AccountDropdown />
             ) : (
               <Link
                 href="/auth"
-                className="bg-black text-white px-4 py-2 rounded-md text-sm hover:opacity-90 transition whitespace-nowrap"
+                className="bg-black text-white px-3 py-1.5 rounded-md text-xs hover:opacity-90 transition whitespace-nowrap"
               >
                 Login
               </Link>
             )}
+
+
+            {/* MOBILE MENU */}
 
             {!isWorkspace && (
               <button
@@ -163,38 +207,42 @@ export default function Navbar() {
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label="Toggle Menu"
               >
-                {isOpen ? <X size={24} /> : <Menu size={24} />}
+                {isOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
             )}
 
           </div>
 
         </div>
+
       </Container>
 
+
       {/* MOBILE MENU */}
+
       {!isWorkspace && (
+
         <div
           className={`lg:hidden fixed inset-0 z-40 transition ${
             isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
 
-          {/* BACKDROP */}
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
           />
 
-          {/* MENU PANEL */}
           <div
             className={`absolute top-16 left-0 w-full bg-white shadow-xl transform transition-transform ${
               isOpen ? "translate-y-0" : "-translate-y-full"
             }`}
           >
+
             <nav className="flex flex-col p-6 gap-6 text-lg font-medium text-gray-800">
 
               {navLinks.map((link) => {
+
                 const Icon = link.icon;
 
                 return (
@@ -208,41 +256,17 @@ export default function Navbar() {
                     {link.label}
                   </Link>
                 );
+
               })}
 
-              {(role === "admin" || role === "owner") && (
-                <a
-                  href="https://workspace.ndo.network"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-green-600 font-semibold"
-                >
-                  <Settings size={20} className="text-green-600" />
-                  Admin Portal
-                </a>
-              )}
-
-              <a
-                href="https://youtube.com/@playwithndo"
-                className="flex items-center gap-3"
-              >
-                <FaYoutube size={22} className="text-red-600" />
-                YouTube
-              </a>
-
-              <a
-                href="https://discord.gg/3WkK9GUc8B"
-                className="flex items-center gap-3"
-              >
-                <FaDiscord size={22} className="text-indigo-600" />
-                Discord
-              </a>
-
             </nav>
+
           </div>
 
         </div>
+
       )}
+
     </header>
   );
 }

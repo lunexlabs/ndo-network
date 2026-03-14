@@ -4,25 +4,28 @@ import { createServerClient } from "@supabase/ssr";
 export async function createClient() {
   const cookieStore = await cookies();
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !anonKey) {
-    throw new Error("Missing Supabase environment variables.");
-  }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
   return createServerClient(url, anonKey, {
     cookies: {
-      getAll() {
-        return cookieStore.getAll();
+      get(name: string) {
+        return cookieStore.get(name)?.value;
       },
-      setAll(cookiesToSet) {
+
+      set(name: string, value: string, options: any) {
         try {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
+          cookieStore.set({ name, value, ...options });
         } catch {
-          // Safe fallback for server component render cases.
+          // ignore when running during server render
+        }
+      },
+
+      remove(name: string, options: any) {
+        try {
+          cookieStore.set({ name, value: "", ...options });
+        } catch {
+          // ignore when running during server render
         }
       },
     },

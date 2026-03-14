@@ -4,6 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/src/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
+import {
+  User,
+  Shield,
+  MessageSquare,
+  HelpCircle,
+  LogOut
+} from "lucide-react";
+
 export default function AccountDropdown() {
   const supabase = createClient();
   const router = useRouter();
@@ -11,6 +19,7 @@ export default function AccountDropdown() {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -34,7 +43,7 @@ export default function AccountDropdown() {
         .eq("id", user.id)
         .single();
 
-      setProfile(data);
+      if (data) setProfile(data);
     }
 
     loadUser();
@@ -74,9 +83,21 @@ export default function AccountDropdown() {
   ------------------------- */
 
   async function logout() {
+    setLoggingOut(true);
+
     await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
+
+    window.location.href = "/";
+  }
+
+  /* -------------------------
+     OPEN WORKSPACE TAB
+  ------------------------- */
+
+  function openWorkspace() {
+    setOpen(false);
+
+    window.open("/workspace", "_blank", "noopener,noreferrer");
   }
 
   if (!user) return null;
@@ -84,15 +105,16 @@ export default function AccountDropdown() {
   return (
     <div ref={dropdownRef} className="relative">
 
-      {/* Button */}
+      {/* BUTTON */}
+
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2"
       >
         <img
-          title="User Avatar"
           src={profile?.avatar_url || "/default-avatar.png"}
-          className="w-8 h-8 rounded-md"
+          alt="User Avatar"
+          className="w-8 h-8 rounded-md object-cover"
         />
 
         <span className="text-sm font-medium text-gray-800">
@@ -102,35 +124,39 @@ export default function AccountDropdown() {
         <span className="text-xs">▾</span>
       </button>
 
+      {/* DROPDOWN */}
+
       {open && (
         <div
           className="
           absolute right-0 mt-3 w-64 rounded-xl
-          bg-white/96
-          backdrop-blur-xl
+          bg-white/96 backdrop-blur-xl
           border border-white/40
           shadow-[0_8px_30px_rgba(0,0,0,0.08)]
           overflow-hidden
           "
         >
 
-          {/* PROFILE */}
+          {/* PROFILE HEADER */}
+
           <div className="flex items-center gap-3 p-4 border-b border-white/40">
 
             <img
-              title="User Avatar"
               src={profile?.avatar_url || "/default-avatar.png"}
-              className="w-10 h-10 rounded-md"
+              alt="Profile Avatar"
+              className="w-10 h-10 rounded-md object-cover"
             />
 
             <div>
+
               <div className="font-medium text-gray-900">
-                {profile?.display_name}
+                {profile?.display_name || "User"}
               </div>
 
               <div className="text-xs text-gray-600">
                 {user.email}
               </div>
+
             </div>
 
           </div>
@@ -138,6 +164,7 @@ export default function AccountDropdown() {
           {/* LINKS */}
 
           <DropdownItem
+            icon={User}
             label="Account Settings"
             onClick={() => {
               setOpen(false);
@@ -147,23 +174,23 @@ export default function AccountDropdown() {
 
           {(profile?.role === "admin" || profile?.role === "owner") && (
             <DropdownItem
-              label="Admin Portal"
-              onClick={() => {
-                setOpen(false);
-                router.push("/ndo-admin-portal");
-              }}
+              icon={Shield}
+              label="Workspace Portal"
+              onClick={openWorkspace}
             />
           )}
 
           <DropdownItem
+            icon={MessageSquare}
             label="Fan Wall"
             onClick={() => {
               setOpen(false);
-              router.push("/fans");
+              router.push("/notes");
             }}
           />
 
           <DropdownItem
+            icon={HelpCircle}
             label="Help Center"
             onClick={() => {
               setOpen(false);
@@ -175,38 +202,50 @@ export default function AccountDropdown() {
 
           <div className="border-t border-white/40">
 
-            <button
+            <DropdownItem
+              icon={LogOut}
+              label={loggingOut ? "Signing out..." : "Sign Out"}
+              danger
               onClick={logout}
-              className="w-full text-left px-4 py-3 text-red-500 hover:bg-white/30"
-            >
-              Sign Out
-            </button>
+            />
 
           </div>
+
         </div>
       )}
     </div>
   );
 }
 
+/* -------------------------
+   DROPDOWN ITEM
+------------------------- */
+
 function DropdownItem({
   label,
+  icon: Icon,
   onClick,
+  danger = false
 }: {
   label: string;
+  icon: any;
   onClick: () => void;
+  danger?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className="
-      block w-full text-left px-4 py-3
-      text-gray-800
-      hover:bg-white/30
-      transition
-      "
+      className={`
+      flex items-center gap-3 w-full text-left px-4 py-3
+      ${danger ? "text-red-500" : "text-gray-800"}
+      hover:bg-white/30 transition
+      `}
     >
+
+      <Icon size={16} />
+
       {label}
+
     </button>
   );
 }
