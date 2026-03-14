@@ -17,7 +17,7 @@ export default async function SiteLayout({ children }: Props) {
 
   return (
     <>
-      <Navbar initialSession={session} />
+      <Navbar/>
       <main className="min-h-screen">{children}</main>
       <Footer />
     </>
