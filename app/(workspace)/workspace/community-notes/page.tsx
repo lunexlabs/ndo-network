@@ -2,126 +2,123 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/src/lib/supabase/client";
-import {
-  Check,
-  Trash2,
-  Star,
-  Pin,
-  Search
-} from "lucide-react";
+import { Check, Trash2, Star, Pin, Search } from "lucide-react";
 
 export default function CommunityNotesPage() {
 
   const supabase = createClient();
 
-  const [notes, setNotes] = useState<any[]>([]);
-  const [filter, setFilter] = useState("pending");
-  const [search, setSearch] = useState("");
+  const [notes,setNotes]=useState<any[]>([])
+  const [filter,setFilter]=useState("all")
+  const [search,setSearch]=useState("")
 
-  /* -----------------------------
-     LOAD NOTES
-  ----------------------------- */
+  /* LOAD NOTES */
 
-  async function loadNotes() {
+  async function loadNotes(){
 
-    const { data, error } = await supabase
+    const {data,error}=await supabase
       .from("fan_wall_messages")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at",{ascending:false})
 
-    if (error) {
-      console.error(error);
-      return;
-    }
+    if(error) console.error(error)
 
-    if (data) setNotes(data);
+    setNotes(data || [])
+
   }
 
-  useEffect(() => {
-    loadNotes();
-  }, []);
+  useEffect(()=>{
+    loadNotes()
+  },[])
 
-  /* -----------------------------
-     ACTIONS
-  ----------------------------- */
+  /* ACTIONS */
 
-  async function approve(id: string) {
+  async function approve(id:string){
 
     await supabase
       .from("fan_wall_messages")
-      .update({ status: "approved" })
-      .eq("id", id);
+      .update({status:"approved"})
+      .eq("id",id)
 
-    loadNotes();
+    loadNotes()
+
   }
 
-  async function remove(id: string) {
+  async function remove(id:string){
 
     await supabase
       .from("fan_wall_messages")
       .delete()
-      .eq("id", id);
+      .eq("id",id)
 
-    loadNotes();
+    loadNotes()
+
   }
 
-  async function togglePinned(note: any) {
+  async function togglePinned(note:any){
 
     await supabase
       .from("fan_wall_messages")
-      .update({ pinned: !note.pinned })
-      .eq("id", note.id);
+      .update({is_pinned:!note.is_pinned})
+      .eq("id",note.id)
 
-    loadNotes();
+    loadNotes()
+
   }
 
-  async function toggleFeatured(note: any) {
+  async function toggleFeatured(note:any){
 
     await supabase
       .from("fan_wall_messages")
-      .update({ featured: !note.featured })
-      .eq("id", note.id);
+      .update({is_featured:!note.is_featured})
+      .eq("id",note.id)
 
-    loadNotes();
+    loadNotes()
+
   }
 
-  /* -----------------------------
-     FILTER + SEARCH
-  ----------------------------- */
+  /* FILTER */
 
-  const filtered = notes
-    .filter(note => {
+  const filtered=notes
+    .filter(note=>{
 
-      if (filter === "pending") return note.status === "pending";
-      if (filter === "approved") return note.status === "approved";
+      if(filter==="pending") return note.status==="pending"
+      if(filter==="approved") return note.status==="approved"
+      if(filter==="pinned") return note.is_pinned===true
+      if(filter==="featured") return note.is_featured===true
 
-      return true;
+      return true
+
     })
-    .filter(note =>
+    .filter(note=>
       note.name?.toLowerCase().includes(search.toLowerCase()) ||
       note.message?.toLowerCase().includes(search.toLowerCase())
-    );
+    )
 
-  /* -----------------------------
-     COUNTS
-  ----------------------------- */
+  /* COUNTS */
 
-  const pendingCount = notes.filter(n => n.status === "pending").length;
-  const approvedCount = notes.filter(n => n.status === "approved").length;
+  const counts={
+    all:notes.length,
+    pending:notes.filter(n=>n.status==="pending").length,
+    approved:notes.filter(n=>n.status==="approved").length,
+    pinned:notes.filter(n=>n.is_pinned).length,
+    featured:notes.filter(n=>n.is_featured).length
+  }
 
-  return (
-    <div className="space-y-10">
+  return(
+
+    <div className="space-y-8">
 
       {/* HEADER */}
 
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
 
         <h1 className="text-2xl font-semibold">
           Community Notes
         </h1>
 
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          Total: {notes.length}
+        <div className="text-sm text-gray-500">
+          Total Notes: {notes.length}
         </div>
 
       </div>
@@ -136,229 +133,198 @@ export default function CommunityNotesPage() {
           placeholder="Search notes..."
           value={search}
           onChange={(e)=>setSearch(e.target.value)}
-          className="
-          w-full pl-9 pr-4 py-2
-          border rounded-lg
-          bg-white
-          text-sm
-          "
+          className="w-full pl-9 pr-4 py-2 border rounded-md text-sm"
         />
 
       </div>
 
-      {/* FILTER TABS */}
+      {/* FILTERS */}
 
-      <div className="flex gap-3">
+      <div className="flex gap-2 flex-wrap">
 
-        <FilterButton
-          label={`Pending (${pendingCount})`}
-          active={filter === "pending"}
-          onClick={() => setFilter("pending")}
-        />
+        <FilterButton label={`All (${counts.all})`} active={filter==="all"} color="gray" onClick={()=>setFilter("all")} />
 
-        <FilterButton
-          label={`Approved (${approvedCount})`}
-          active={filter === "approved"}
-          onClick={() => setFilter("approved")}
-        />
+        <FilterButton label={`Pending (${counts.pending})`} active={filter==="pending"} color="yellow" onClick={()=>setFilter("pending")} />
 
-        <FilterButton
-          label="All"
-          active={filter === "all"}
-          onClick={() => setFilter("all")}
-        />
+        <FilterButton label={`Approved (${counts.approved})`} active={filter==="approved"} color="green" onClick={()=>setFilter("approved")} />
+
+        <FilterButton label={`Pinned (${counts.pinned})`} active={filter==="pinned"} color="blue" onClick={()=>setFilter("pinned")} />
+
+        <FilterButton label={`Featured (${counts.featured})`} active={filter==="featured"} color="purple" onClick={()=>setFilter("featured")} />
 
       </div>
 
-      {/* NOTES */}
+      {/* TABLE */}
 
-      <div className="space-y-5">
+      <div className="overflow-x-auto border rounded-lg">
 
-        {filtered.map((note) => (
+        <table className="w-full text-sm">
 
-          <div
-            key={note.id}
-            className="
-            bg-white
-            border
-            rounded-xl
-            p-6
-            shadow-sm
-            "
-          >
+          <thead className="bg-gray-50 border-b text-gray-600">
 
-            {/* HEADER */}
+            <tr>
 
-            <div className="flex justify-between items-start">
+              <th className="p-3 text-left">#</th>
+              <th className="p-3 text-left">Name</th>
+              <th className="p-3 text-left">Location</th>
+              <th className="p-3 text-left">Message</th>
+              <th className="p-3 text-left">Status</th>
+              <th className="p-3 text-left">Date</th>
+              <th className="p-3 text-right">Actions</th>
 
-              <div>
+            </tr>
 
-                <div className="font-semibold text-gray-900">
+          </thead>
+
+          <tbody>
+
+            {filtered.map((note,i)=>(
+
+              <tr key={note.id} className="border-b hover:bg-gray-50">
+
+                <td className="p-3 text-gray-400">
+                  {i+1}
+                </td>
+
+                <td className="p-3 font-medium flex items-center gap-2">
+
                   {note.name}
-                </div>
 
-                <div className="text-sm text-gray-500">
+                  {note.is_pinned && (
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                      Pinned
+                    </span>
+                  )}
+
+                  {note.is_featured && (
+                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                      Featured
+                    </span>
+                  )}
+
+                </td>
+
+                <td className="p-3 text-gray-500">
                   {note.city}, {note.country}
-                </div>
+                </td>
 
-              </div>
+                <td className="p-3 max-w-md text-gray-700">
+                  {note.message}
+                </td>
 
-              <div className="flex items-center gap-3">
+                <td className="p-3">
+                  <StatusBadge status={note.status}/>
+                </td>
 
-                <StatusBadge status={note.status} />
-
-                <div className="text-xs text-gray-400">
+                <td className="p-3 text-gray-400">
                   {new Date(note.created_at).toLocaleDateString()}
-                </div>
+                </td>
 
-              </div>
+                <td className="p-3">
 
-            </div>
+                  <div className="flex justify-end gap-2">
 
-            {/* MESSAGE */}
+                    {note.status==="pending" && (
+                      <ActionButton icon={Check} color="green" onClick={()=>approve(note.id)} />
+                    )}
 
-            <p className="mt-4 text-gray-700">
-              {note.message}
-            </p>
+                    <ActionButton
+                      icon={Pin}
+                      color={note.is_pinned ? "blueActive" : "blue"}
+                      onClick={()=>togglePinned(note)}
+                    />
 
-            {/* ACTIONS */}
+                    <ActionButton
+                      icon={Star}
+                      color={note.is_featured ? "purpleActive" : "purple"}
+                      onClick={()=>toggleFeatured(note)}
+                    />
 
-            <div className="flex items-center gap-3 mt-5">
+                    <ActionButton icon={Trash2} color="red" onClick={()=>remove(note.id)} />
 
-              {note.status === "pending" && (
-                <ActionButton
-                  icon={Check}
-                  label="Approve"
-                  color="green"
-                  onClick={() => approve(note.id)}
-                />
-              )}
+                  </div>
 
-              <ActionButton
-                icon={Pin}
-                label={note.pinned ? "Unpin" : "Pin"}
-                color="blue"
-                onClick={() => togglePinned(note)}
-              />
+                </td>
 
-              <ActionButton
-                icon={Star}
-                label={note.featured ? "Unfeature" : "Feature"}
-                color="yellow"
-                onClick={() => toggleFeatured(note)}
-              />
+              </tr>
 
-              <ActionButton
-                icon={Trash2}
-                label="Delete"
-                color="red"
-                onClick={() => remove(note.id)}
-              />
+            ))}
 
-            </div>
+          </tbody>
 
-          </div>
-
-        ))}
-
-        {filtered.length === 0 && (
-          <div className="text-gray-500 text-sm">
-            No notes found.
-          </div>
-        )}
+        </table>
 
       </div>
 
     </div>
-  );
+
+  )
+
 }
 
-/* -----------------------------
-   FILTER BUTTON
------------------------------ */
+/* STATUS BADGE */
 
-function FilterButton({
-  label,
-  active,
-  onClick
-}: {
-  label: string
-  active: boolean
-  onClick: () => void
-}) {
+function StatusBadge({status}:{status:string}){
 
-  return (
-    <button
-      onClick={onClick}
-      className={`
-      px-4 py-2 text-sm rounded-lg border
-      transition
-      ${active
-        ? "bg-black text-white border-black"
-        : "bg-white text-gray-700 border-gray-300"}
-      `}
-    >
-      {label}
-    </button>
-  );
-}
+  const styles:any={
 
-/* -----------------------------
-   STATUS BADGE
------------------------------ */
+    pending:"bg-yellow-100 text-yellow-700",
+    approved:"bg-green-100 text-green-700",
+    rejected:"bg-red-100 text-red-700"
 
-function StatusBadge({ status }: { status: string }) {
-
-  if (status === "pending") {
-    return (
-      <span className="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-700">
-        Pending
-      </span>
-    );
   }
 
-  return (
-    <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
-      Approved
+  return(
+    <span className={`px-2 py-1 text-xs rounded ${styles[status]}`}>
+      {status}
     </span>
-  );
+  )
+
 }
 
-/* -----------------------------
-   ACTION BUTTON
------------------------------ */
+/* FILTER BUTTON */
 
-function ActionButton({
-  icon: Icon,
-  label,
-  onClick,
-  color
-}: {
-  icon: any
-  label: string
-  onClick: () => void
-  color: string
-}) {
+function FilterButton({label,active,color,onClick}:any){
 
-  const colors: any = {
-    green: "bg-green-500 hover:bg-green-600",
-    red: "bg-red-500 hover:bg-red-600",
-    blue: "bg-blue-500 hover:bg-blue-600",
-    yellow: "bg-yellow-500 hover:bg-yellow-600"
-  };
+  const colors:any={
+    gray:"bg-gray-100 text-gray-700 border-gray-200",
+    yellow:"bg-yellow-100 text-yellow-700 border-yellow-200",
+    green:"bg-green-100 text-green-700 border-green-200",
+    blue:"bg-blue-100 text-blue-700 border-blue-200",
+    purple:"bg-purple-100 text-purple-700 border-purple-200"
+  }
 
-  return (
+  return(
     <button
       onClick={onClick}
-      className={`
-      flex items-center gap-1
-      text-xs text-white
-      px-3 py-1 rounded
-      ${colors[color]}
-      `}
+      className={`px-3 py-1 text-xs rounded-md border ${active?colors[color]:"bg-gray-50 text-gray-500 border-gray-200"}`}
     >
-      <Icon size={14}/>
       {label}
     </button>
-  );
+  )
+
+}
+
+/* ACTION BUTTON */
+
+function ActionButton({icon:Icon,color,onClick}:any){
+
+  const colors:any={
+    green:"bg-green-500 hover:bg-green-600",
+    red:"bg-red-500 hover:bg-red-600",
+    blue:"bg-blue-500 hover:bg-blue-600",
+    purple:"bg-purple-500 hover:bg-purple-600",
+    blueActive:"bg-blue-700",
+    purpleActive:"bg-purple-700"
+  }
+
+  return(
+    <button
+      onClick={onClick}
+      className={`p-2 rounded text-white ${colors[color]}`}
+    >
+      <Icon size={14}/>
+    </button>
+  )
+
 }

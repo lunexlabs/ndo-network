@@ -1,7 +1,44 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Card from "./Card";
 import { Heart, Play, Users } from "lucide-react";
+import { createClient } from "@/src/lib/supabase/client";
 
 export default function StatCards() {
+
+  const supabase = createClient();
+
+  const [submissionCount, setSubmissionCount] = useState(0);
+  const [weeklySubmissions, setWeeklySubmissions] = useState(0);
+
+  async function loadSubmissionStats() {
+
+    /* TOTAL SUBMISSIONS */
+
+    const { count } = await supabase
+      .from("actv_submissions")
+      .select("*", { count: "exact", head: true });
+
+    if (count) setSubmissionCount(count);
+
+    /* THIS WEEK */
+
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - 7);
+
+    const { count: weekCount } = await supabase
+      .from("actv_submissions")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", weekStart.toISOString());
+
+    if (weekCount) setWeeklySubmissions(weekCount);
+  }
+
+  useEffect(() => {
+    loadSubmissionStats();
+  }, []);
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
@@ -10,13 +47,9 @@ export default function StatCards() {
       <Card>
         <div className="relative">
 
-          {/* ICON */}
-
           <div className="absolute top-0 right-0 w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center">
             <Heart className="text-blue-500 fill-blue-500" size={16}/>
           </div>
-
-          {/* TEXT */}
 
           <p className="text-gray-500 text-sm">
             Community Notes
@@ -48,11 +81,11 @@ export default function StatCards() {
           </p>
 
           <h2 className="text-3xl font-semibold mt-2 text-purple-500/80">
-            59
+            {submissionCount}
           </h2>
 
           <p className="text-green-500 text-sm mt-1">
-            +7 this week
+            +{weeklySubmissions} this week
           </p>
 
         </div>
