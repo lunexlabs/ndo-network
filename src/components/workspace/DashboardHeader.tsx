@@ -147,7 +147,7 @@ export default function DashboardHeader() {
 
               {lastLogin && (
                 <span className="text-gray-400">
-                  {" • "}Last login {lastLogin}
+                  {" • "}Last login ({lastLogin})
                 </span>
               )}
 
